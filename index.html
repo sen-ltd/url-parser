@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Parser — SEN LLC</title>
+  <meta name="description" content="URL parser and query string editor with live reconstruction and percent encoding tools.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Mono:wght@400;500&display=swap');
+  </style>
+</head>
+<body>
+
+<!-- ── Header ───────────────────────────────────────────────────────────── -->
+<header class="app-header">
+  <div class="header-left">
+    <h1 data-i18n="title">URL Parser</h1>
+    <p data-i18n="subtitle">Parse, edit, and reconstruct URLs</p>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-secondary btn-sm" id="lang-toggle" title="Switch language">日本語</button>
+    <button class="btn btn-secondary btn-sm" id="theme-toggle" data-i18n="themeToggle">Toggle theme</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── Examples ─────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <span data-i18n="examplesTitle">URL Examples</span>
+    </div>
+    <div class="card-body">
+      <select id="examples-select">
+        <option value="">— select an example —</option>
+        <option value="https://example.com">https://example.com</option>
+        <option value="https://user:pass@api.example.com:8080/v1/items?page=1&amp;limit=20&amp;q=hello+world#results">
+          API with auth, port, query, hash
+        </option>
+        <option value="https://example.com/search?q=%E6%97%A5%E6%9C%AC%E8%AA%9E&amp;lang=ja">
+          Japanese query parameter (encoded)
+        </option>
+        <option value="https://maps.example.com/?lat=35.6762&amp;lng=139.6503&amp;zoom=12">
+          Geo coordinates in query
+        </option>
+        <option value="http://[::1]:3000/api/health">IPv6 host with port</option>
+        <option value="https://cdn.example.com/assets/image.png?v=1.2.3&amp;bust=true">
+          CDN asset URL with version
+        </option>
+        <option value="ftp://files.example.com/pub/data.tar.gz">FTP URL</option>
+        <option value="https://example.com/path/to/deep/page">Simple path</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ── URL Input ─────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-body">
+      <div class="input-row">
+        <label class="input-label" for="url-input" data-i18n="inputLabel">Enter URL</label>
+        <div class="url-input-wrap">
+          <input
+            type="text"
+            id="url-input"
+            data-i18n-placeholder="inputPlaceholder"
+            placeholder="https://example.com/path?key=value#section"
+            spellcheck="false"
+            autocomplete="off"
+          >
+          <button class="btn btn-primary" id="parse-btn" data-i18n="parseBtn">Parse</button>
+          <button class="btn btn-secondary" id="clear-btn" data-i18n="clearBtn">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Components ────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <span data-i18n="componentTitle">URL Components</span>
+    </div>
+    <div class="card-body">
+      <div class="component-grid">
+        <div class="component-field">
+          <label for="field-protocol" data-i18n="protocol">Protocol</label>
+          <input type="text" id="field-protocol" placeholder="https">
+        </div>
+        <div class="component-field">
+          <label for="field-username" data-i18n="username">Username</label>
+          <input type="text" id="field-username" placeholder="">
+        </div>
+        <div class="component-field">
+          <label for="field-password" data-i18n="password">Password</label>
+          <input type="text" id="field-password" placeholder="">
+        </div>
+        <div class="component-field">
+          <label for="field-hostname" data-i18n="hostname">Hostname</label>
+          <input type="text" id="field-hostname" placeholder="example.com">
+        </div>
+        <div class="component-field">
+          <label for="field-port" data-i18n="port">Port</label>
+          <input type="text" id="field-port" placeholder="">
+        </div>
+        <div class="component-field">
+          <label for="field-hash" data-i18n="hash">Fragment</label>
+          <input type="text" id="field-hash" placeholder="">
+        </div>
+        <div class="component-field wide">
+          <label for="field-pathname" data-i18n="pathname">Path</label>
+          <input type="text" id="field-pathname" placeholder="/">
+        </div>
+        <div class="component-field wide">
+          <label for="field-search" data-i18n="search">Query String (auto)</label>
+          <input type="text" id="field-search" readonly placeholder="?key=value" style="opacity:.7">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Rebuilt URL ────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <span data-i18n="rebuildTitle">Rebuilt URL</span>
+      <button class="btn btn-secondary btn-sm" id="copy-rebuilt-btn" data-i18n="copyBtn">Copy</button>
+    </div>
+    <div class="card-body">
+      <div class="rebuilt-row">
+        <input type="text" id="rebuilt-url" readonly spellcheck="false">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Query String Editor ───────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <span data-i18n="queryEditor">Query String Editor</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="key">Key</th>
+            <th data-i18n="value">Value</th>
+            <th data-i18n="actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="query-tbody"></tbody>
+      </table>
+    </div>
+    <div class="table-footer">
+      <button class="btn btn-secondary btn-sm" id="add-param-btn" data-i18n="addParam">Add Parameter</button>
+    </div>
+  </div>
+
+  <!-- ── Validation ─────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <span data-i18n="validationTitle">Validation</span>
+    </div>
+    <div class="card-body">
+      <div id="validation-panel"></div>
+    </div>
+  </div>
+
+  <!-- ── Encode / Decode ────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <span data-i18n="encodeDecodeTitle">Encode / Decode</span>
+    </div>
+    <div class="card-body">
+      <div class="input-row" style="margin-bottom:.75rem">
+        <label class="input-label" for="encode-input" data-i18n="encodeInput">Text</label>
+        <input type="text" id="encode-input" placeholder="日本語 / special chars / %20">
+        <div class="encode-actions">
+          <button class="btn btn-primary btn-sm" id="encode-btn" data-i18n="encodeBtn">Encode</button>
+          <button class="btn btn-secondary btn-sm" id="decode-btn" data-i18n="decodeBtn">Decode</button>
+        </div>
+      </div>
+      <div class="encode-grid">
+        <div class="group">
+          <label data-i18n="encoded">Encoded</label>
+          <div class="output-row">
+            <input type="text" id="encoded-output" readonly spellcheck="false">
+            <button class="btn btn-secondary btn-sm" id="copy-encoded-btn" data-i18n="copyBtn">Copy</button>
+          </div>
+        </div>
+        <div class="group">
+          <label data-i18n="decoded">Decoded</label>
+          <div class="output-row">
+            <input type="text" id="decoded-output" readonly spellcheck="false">
+            <button class="btn btn-secondary btn-sm" id="copy-decoded-btn" data-i18n="copyBtn">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
