@@ -49,3 +49,10 @@ MIT — see [LICENSE](LICENSE).
 ---
 
 Built by [SEN LLC](https://sen.ltd) · [Portfolio](https://sen.ltd/portfolio/)
+
+<!-- sen-publish:links -->
+## Links
+
+- 🌐 Demo: https://sen.ltd/portfolio/url-parser/
+- 📝 dev.to: https://dev.to/sendotltd/a-url-parser-and-query-string-editor-with-live-rebuild-125g
+<!-- /sen-publish:links -->
